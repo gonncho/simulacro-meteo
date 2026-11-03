@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulacro Meteorología Física</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#EEF2F1; --surface:#FFFFFF; --surface-2:#F6F8F7; --ink:#14212A; --ink-2:#4A5B66; --rule:#D3DCDC;
+  --accent:#1D5B79; --accent-ink:#FFFFFF; --accent-soft:#DCEAF1;
+  --amber:#A8661C; --amber-soft:#F5E6D2;
+  --ok:#2E7A4B; --ok-soft:#DDEFE3; --bad:#A93A30; --bad-soft:#F6DEDA; --blank:#7A8790; --blank-soft:#E6EAEC;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E161B; --surface:#152128; --surface-2:#1A2830; --ink:#E2EAEE; --ink-2:#9EB0BA; --rule:#2A3A43;
+    --accent:#6CB4D6; --accent-ink:#0E161B; --accent-soft:#1D3644;
+    --amber:#E0A35A; --amber-soft:#3A2C1A;
+    --ok:#6CC491; --ok-soft:#173326; --bad:#F08A7D; --bad-soft:#3C1E1A; --blank:#8D9BA4; --blank-soft:#22313A;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E161B; --surface:#152128; --surface-2:#1A2830; --ink:#E2EAEE; --ink-2:#9EB0BA; --rule:#2A3A43;
+  --accent:#6CB4D6; --accent-ink:#0E161B; --accent-soft:#1D3644;
+  --amber:#E0A35A; --amber-soft:#3A2C1A;
+  --ok:#6CC491; --ok-soft:#173326; --bad:#F08A7D; --bad-soft:#3C1E1A; --blank:#8D9BA4; --blank-soft:#22313A;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;padding:0 16px}
+.wrap{max-width:860px;margin:0 auto;padding-block:28px 120px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,6vw,2.9rem);font-weight:700;letter-spacing:.01em;line-height:1}
+.eyebrow{font-family:var(--display);font-weight:600;font-size:.95rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.lede{color:var(--ink-2);max-width:62ch;margin:.6rem 0 0}
+header{display:grid;gap:18px;margin-bottom:26px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.rule-card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:14px 16px;display:grid;gap:4px}
+.rule-card b{font-family:var(--display);font-size:1.25rem;font-weight:600}
+.rule-card span{color:var(--ink-2);font-size:.95rem}
+.rule-card .pts{font-family:var(--mono);font-size:.85rem;color:var(--accent)}
+.controls{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;background:var(--surface-2);border:1px solid var(--rule);border-radius:10px;padding:14px 16px}
+.ctl-group{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctl-label{font-family:var(--display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:.85rem;color:var(--ink-2);margin-right:4px}
+.chk{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--rule);border-radius:999px;background:var(--surface);cursor:pointer;font-size:.92rem;user-select:none}
+.chk input{accent-color:var(--accent);margin:0}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--ink);font:inherit;font-size:.92rem;padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn{font:inherit;font-weight:600;border-radius:8px;padding:9px 16px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,.chk:focus-within,.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.ctl-push{margin-left:auto}
+.section-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px;border-bottom:2px solid var(--ink);padding-bottom:6px;margin:34px 0 14px}
+.section-head h2{font-size:1.7rem;font-weight:700}
+.section-head .meta{font-family:var(--mono);font-size:.82rem;color:var(--ink-2)}
+ol.qs{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.q{background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--rule);border-radius:0;padding:14px 16px;display:grid;gap:10px}
+.q.ok{border-left-color:var(--ok)} .q.bad{border-left-color:var(--bad)} .q.blank{border-left-color:var(--blank)}
+.q-top{display:flex;gap:12px;align-items:flex-start}
+.qnum{font-family:var(--mono);font-weight:600;font-size:.9rem;color:var(--ink-2);min-width:2.2ch;padding-top:2px}
+.qtext{flex:1;min-width:0}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{font-family:var(--display);font-weight:600;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;padding:1px 8px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
+.tag.prob{background:var(--amber-soft);color:var(--amber)}
+.vf-btns{display:flex;gap:8px;padding-left:calc(2.2ch + 12px)}
+.vf-btns button{font:inherit;font-weight:600;min-width:110px;padding:7px 12px;border-radius:8px;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink);cursor:pointer}
+.vf-btns button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.opts{display:grid;gap:6px;padding-left:calc(2.2ch + 12px)}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;font:inherit;width:100%;padding:8px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface-2);color:var(--ink);cursor:pointer}
+.opt .ol{font-family:var(--mono);font-weight:600;color:var(--ink-2)}
+.opt[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:var(--surface)}
+.opt.is-right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.is-wrong{border-color:var(--bad);background:var(--bad-soft)}
+.vf-btns button.is-right{border-color:var(--ok);background:var(--ok-soft);color:var(--ink)}
+.vf-btns button.is-wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--ink)}
+.clear{justify-self:start;margin-left:calc(2.2ch + 12px);border:0;background:none;color:var(--ink-2);font:inherit;font-size:.88rem;text-decoration:underline;cursor:pointer;padding:0}
+.expl{margin-left:calc(2.2ch + 12px);font-size:.95rem;padding:10px 12px;border-radius:8px;background:var(--surface-2);border:1px solid var(--rule)}
+.expl b.v-ok{color:var(--ok)} .expl b.v-bad{color:var(--bad)} .expl b.v-blank{color:var(--blank)}
+.results{background:var(--surface);border:2px solid var(--ink);border-radius:12px;padding:18px;display:grid;gap:16px;margin-bottom:10px}
+.score-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.score{display:grid;gap:2px;padding:10px 12px;border-radius:8px;background:var(--surface-2)}
+.score .lab{font-family:var(--display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:.8rem;color:var(--ink-2)}
+.score .val{font-family:var(--mono);font-weight:600;font-size:1.7rem;font-variant-numeric:tabular-nums}
+.score .det{font-size:.88rem;color:var(--ink-2)}
+.score.total{background:var(--accent);color:var(--accent-ink)}
+.score.total .lab,.score.total .det{color:var(--accent-ink);opacity:.85}
+.hist{font-size:.9rem;color:var(--ink-2)}
+.hist ol{margin:.3rem 0 0;padding-left:1.2rem;font-family:var(--mono);font-size:.84rem}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--rule);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.bar-in{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
+.prog{font-family:var(--mono);font-size:.86rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.prog b{color:var(--ink)}
+.note{font-size:.88rem;color:var(--ink-2)}
+@media (max-width:520px){.vf-btns,.opts{padding-left:0}.clear,.expl{margin-left:0}.vf-btns button{flex:1;min-width:0}.ctl-push{margin-left:0}}
+@media (prefers-reduced-motion:no-preference){.q{transition:border-color .2s}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div>
+    <div class="eyebrow">Meteorología Física · UB 2026–27</div>
+    <h1>Simulacro de examen</h1>
+    <p class="lede">Cada examen se monta al azar desde un banco de preguntas de los cuatro temas. Responde, pulsa «Corregir» y revisa la explicación de cada pregunta.</p>
+  </div>
+  <div class="rules">
+    <div class="rule-card"><b>Parte 1 · Verdadero o falso</b><span>30 preguntas de teoría. Los fallos no restan.</span><span class="pts">0,1 pt por acierto · máx. 3 pt</span></div>
+    <div class="rule-card"><b>Parte 2 · Tipo test</b><span>14 preguntas de 4 opciones, con algún problema. Cada fallo resta un acierto.</span><span class="pts">0,5 pt por acierto neto · máx. 7 pt</span></div>
+  </div>
+  <div class="controls" role="group" aria-label="Opciones del examen">
+    <div class="ctl-group" id="temas">
+      <span class="ctl-label">Temas</span>
+      <label class="chk"><input type="checkbox" id="t1" value="1" checked> 1 · Estructura</label>
+      <label class="chk"><input type="checkbox" id="t2" value="2" checked> 2 · Presión</label>
+      <label class="chk"><input type="checkbox" id="t3" value="3" checked> 3 · Termodinámica</label>
+      <label class="chk"><input type="checkbox" id="t4" value="4" checked> 4 · Movimiento</label>
+    </div>
+    <div class="ctl-group">
+      <span class="ctl-label">Modo</span>
+      <div class="seg" role="group" aria-label="Modo">
+        <button type="button" id="mode-exam" aria-pressed="true">Examen</button>
+        <button type="button" id="mode-prac" aria-pressed="false">Práctica</button>
+      </div>
+    </div>
+    <button type="button" class="btn ghost ctl-push" id="new">Nuevo examen</button>
+  </div>
+  <p class="note" id="mode-note">Modo examen: la corrección aparece al final. En modo práctica ves la solución al responder cada pregunta.</p>
+</header>
+
+<section id="results" class="results" hidden aria-live="polite"></section>
+
+<section aria-labelledby="h-vf">
+  <div class="section-head"><h2 id="h-vf">Parte 1 · Verdadero o falso</h2><span class="meta" id="meta-vf"></span></div>
+  <ol class="qs" id="list-vf"></ol>
+</section>
+
+<section aria-labelledby="h-mc">
+  <div class="section-head"><h2 id="h-mc">Parte 2 · Tipo test</h2><span class="meta" id="meta-mc"></span></div>
+  <ol class="qs" id="list-mc"></ol>
+</section>
+</div>
+
+<div class="bar">
+  <div class="bar-in">
+    <span class="prog" id="prog"></span>
+    <button type="button" class="btn" id="grade">Corregir examen</button>
+  </div>
+</div>
+
+<script>
+/* ---------- BANCO DE PREGUNTAS ----------
+   VF: [tema, enunciado, respuesta (true = verdadero), explicación]
+   MC: {t: tema, q: pregunta, o: [CORRECTA, distractor, distractor, distractor], e: explicación, p: 1 si es problema}
+   Las opciones se barajan al montar cada examen. */
+const VF = [
+// ---- TEMA 1 ----
+[1,"El clima se define a partir de la estadística (media y variabilidad) del estado de la atmósfera durante un periodo de unos 30 años.",true,"Es la definición de la OMM. El tiempo es el estado en un momento concreto; el clima, su estadística a largo plazo."],
+[1,"El clima es el estado de la atmósfera en un momento y lugar concretos.",false,"Eso es el tiempo (meteorología). El clima es la estadística de ese estado durante unos 30 años."],
+[1,"La criosfera forma parte del sistema climático.",true,"Los cinco componentes son atmósfera, hidrosfera, criosfera, litosfera y biosfera."],
+[1,"El sistema climático está formado únicamente por la atmósfera y la hidrosfera.",false,"Incluye también criosfera, litosfera y biosfera, con sus interacciones y retroalimentaciones."],
+[1,"En la troposfera la temperatura disminuye con la altura porque el aire se calienta principalmente desde la superficie.",true,"El Sol calienta el suelo y este calienta el aire desde abajo (conducción y convección)."],
+[1,"En la estratosfera la temperatura aumenta con la altura porque el ozono absorbe radiación infrarroja terrestre.",false,"El ozono absorbe radiación ultravioleta solar, no infrarroja terrestre."],
+[1,"La mesopausa es la zona más fría de la atmósfera.",true,"Hacia 85 km se alcanzan unos 180 K, el mínimo del perfil de temperatura."],
+[1,"La tropopausa está a mayor altura en los polos que en el ecuador.",false,"Es al revés: 16–18 km en los trópicos y 8–9 km en los polos."],
+[1,"La tropopausa tropical es más fría que la tropopausa polar.",true,"Está mucho más alta (16–18 km) y alcanza unos −80 °C, más fría que la polar."],
+[1,"El gradiente térmico vertical medio de la troposfera estándar es de unos 9,8 K/km.",false,"El gradiente medio ambiental es 6,5 K/km. 9,8 K/km es el adiabático seco de una parcela (Tema 3)."],
+[1,"En la atmósfera estándar la tropopausa está hacia 11 km y unos −56,5 °C.",true,"15 °C − 6,5 K/km · 11 km = −56,5 °C."],
+[1,"El aire es un buen conductor del calor, por eso la conducción domina el transporte de energía en la troposfera.",false,"El aire es muy mal conductor: la conducción solo importa en los primeros milímetros sobre el suelo. Domina la convección."],
+[1,"La convección transporta calor mediante el movimiento de parcelas de aire.",true,"Es la definición de convección (diapo 30 del Tema 1)."],
+[1,"La radiación es el único mecanismo de transferencia de energía que funciona en el vacío.",true,"Conducción y convección necesitan materia; la radiación no."],
+[1,"Alrededor del 90 % del ozono total se encuentra en la estratosfera.",true,"La capa de ozono (máximo hacia 20–25 km). El 10 % restante está en la troposfera."],
+[1,"El ozono troposférico protege de la radiación ultravioleta y no se considera un contaminante.",false,"El ozono cercano a la superficie es un contaminante secundario de origen fotoquímico."],
+[1,"En el ciclo de Chapman, la absorción de UV por el ozono es lo que calienta la estratosfera.",true,"O₃ + hν (0,2–0,4 μm) → O₂ + O: esa absorción calienta la estratosfera."],
+[1,"El argón es el segundo gas más abundante del aire seco.",false,"El segundo es el O₂ (20,95 %). El argón es el tercero (0,93 %)."],
+[1,"El nitrógeno representa aproximadamente el 78 % del volumen del aire seco.",true,"N₂: 78,08 % en volumen."],
+[1,"El vapor de agua tiene un tiempo de residencia en la atmósfera de varios años.",false,"Su tiempo de residencia es de unos 10 días; por eso es tan variable."],
+[1,"Los gases con un tiempo de residencia corto presentan concentraciones muy variables en el espacio y en el tiempo.",true,"Ejemplos: vapor de agua y ozono. Los de τ largo (N₂, O₂, CO₂) están bien mezclados."],
+[1,"En la heterosfera la mezcla turbulenta mantiene una composición constante.",false,"Eso ocurre en la homosfera. En la heterosfera domina la difusión molecular y los gases se estratifican por su masa."],
+[1,"La homosfera se extiende desde la superficie hasta unos 80–100 km.",true,"Su límite superior es la turbopausa (~100 km)."],
+[1,"Un agua precipitable de 1 kg/m² equivale a una lámina de agua de 1 mm.",true,"1 kg de agua repartido en 1 m² forma una capa de 1 mm."],
+[1,"La concentración de CO₂ medida en Mauna Loa presenta su máximo estacional en otoño.",false,"El máximo es en primavera (mayo) y el mínimo en otoño, por la fotosíntesis del verano boreal."],
+[1,"La amplitud del ciclo estacional del CO₂ es mayor en el hemisferio norte y crece con la latitud.",true,"Grande en Barrow (Alaska), casi nula en el Polo Sur: el HN tiene más vegetación continental."],
+[1,"El metano tiene su máximo estacional en primavera, igual que el CO₂.",false,"El CH₄ tiene su máximo en otoño y su mínimo en primavera-verano."],
+[1,"El aumento de CO₂ calienta la troposfera y enfría la estratosfera.",true,"Es la «huella vertical» del calentamiento antropogénico."],
+[1,"Un satélite geoestacionario orbita a unos 700 km de altura.",false,"Los geoestacionarios están a unos 36 000 km. A unos 700 km orbitan los polares."],
+[1,"Los satélites polares orbitan a unos 700 km y tardan alrededor de 100 minutos en dar una vuelta.",true,"Además vuelven a pasar por el mismo punto cada ~3 días."],
+[1,"Entre unos 35°S y 35°N la Tierra absorbe más radiación solar de la que emite en infrarrojo.",true,"Hay superávit tropical y déficit en latitudes altas: hay que transportar calor hacia los polos."],
+[1,"La circulación atmosférica existe porque los polos reciben más energía neta que el ecuador.",false,"Al revés: el ecuador tiene superávit y los polos déficit; la circulación lleva calor del ecuador a los polos."],
+[1,"La mesoescala comprende fenómenos de entre 1 y unos 100 km que duran de horas a días.",true,"Ejemplos: tormentas, brisas, sistemas convectivos."],
+[1,"La escala sinóptica corresponde a fenómenos de unos pocos kilómetros que duran minutos.",false,"La sinóptica es de ~1000 km y días a semanas. Lo de minutos y km es la microescala."],
+[1,"La troposfera contiene la mayor parte de la masa de la atmósfera.",true,"Alrededor del 70–80 % de la masa está por debajo de la tropopausa."],
+[1,"La ventana atmosférica, por donde escapa el infrarrojo terrestre, está entre 0,2 y 0,4 μm.",false,"Está entre unos 8 y 12 μm. 0,2–0,4 μm es la banda UV que absorbe el ozono."],
+[1,"El chorro subtropical está asociado al borde polar de la célula de Hadley.",true,"Es el chorro «thermally-driven», hacia 30°."],
+[1,"El chorro de latitudes medias es de tipo «thermally-driven» y apenas cambia de posición.",false,"Es «eddy-driven» (lo mantienen borrascas y anticiclones) y es muy variable y ondulado."],
+[1,"La AMOC es la rama atlántica de la circulación termohalina.",true,"Circulación oceánica impulsada por diferencias de temperatura y salinidad."],
+[1,"Los aerosoles pueden actuar como núcleos de condensación de las nubes.",true,"Es su efecto indirecto: más aerosoles, gotas más pequeñas y nubes más reflectantes."],
+[1,"En la termosfera la temperatura disminuye con la altura.",false,"Aumenta mucho, porque O₂ y N₂ absorben UV extremo y rayos X."],
+[1,"La ionosfera refleja ondas de radio.",true,"Está ionizada de forma permanente, lo que permite las comunicaciones de radio."],
+[1,"En la tropopausa el vapor de agua disminuye bruscamente porque actúa como una «trampa fría».",true,"La tropopausa es tan fría que el vapor condensa y no pasa a la estratosfera."],
+[1,"El CO₂ presenta una concentración prácticamente constante con la altura en la homosfera.",true,"Tiene un tiempo de residencia largo y está bien mezclado."],
+// ---- TEMA 2 ----
+[2,"La fuerza del gradiente de presión apunta de las altas hacia las bajas presiones.",true,"FGP = −(1/ρ)∇p: el signo menos la orienta en contra del gradiente."],
+[2,"La fuerza del gradiente de presión depende del valor de la presión y no de cómo varía en el espacio.",false,"Depende del gradiente (la variación espacial). Con presión uniforme la FGP es nula."],
+[2,"Con el mismo gradiente de presión, la aceleración producida es mayor cuanto menor es la densidad del aire.",true,"Por el factor 1/ρ: en altura, con aire menos denso, el mismo gradiente acelera más."],
+[2,"La fuerza de Coriolis desvía el movimiento hacia la izquierda en el hemisferio norte.",false,"En el HN desvía hacia la derecha; en el HS, hacia la izquierda."],
+[2,"La fuerza de Coriolis es siempre perpendicular a la velocidad del viento.",true,"Co = −f k̂ × v: cambia la dirección del viento, no su rapidez."],
+[2,"La fuerza de Coriolis puede poner en movimiento aire que inicialmente está en reposo.",false,"Es proporcional a la velocidad: con v = 0 es nula. Primero tiene que actuar la FGP."],
+[2,"El parámetro de Coriolis es nulo en el ecuador.",true,"f = 2Ω sin φ y sin 0° = 0."],
+[2,"El parámetro de Coriolis es máximo en el ecuador.",false,"Es nulo en el ecuador y máximo en los polos (2Ω)."],
+[2,"El viento geostrófico sopla paralelo a las isobaras.",true,"Resulta del equilibrio FGP–Coriolis; en altura, paralelo a las isohipsas."],
+[2,"En el hemisferio norte, el viento geostrófico deja las bajas presiones a su derecha.",false,"En el HN deja las bajas a su izquierda; en el HS, a su derecha."],
+[2,"Cuanto más juntas están las isobaras, más intenso es el viento geostrófico.",true,"La intensidad es proporcional al gradiente de presión."],
+[2,"El balance geostrófico es una buena aproximación cerca del ecuador.",false,"Allí f → 0 y Coriolis desaparece; el geostrófico falla."],
+[2,"Cerca de la superficie, la fricción hace que el viento cruce las isobaras hacia las bajas presiones.",true,"La fricción frena el viento, Coriolis se debilita y la FGP lo desvía hacia la baja."],
+[2,"En el balance geostrófico la FGP y la fuerza de Coriolis son iguales en módulo y de sentido opuesto.",true,"Por eso no hay aceleración y el viento va recto y a velocidad constante."],
+[2,"En el balance geostrófico la fuerza de Coriolis y la FGP son perpendiculares entre sí.",false,"Son opuestas (180°). Cada una es perpendicular al viento, no entre ellas."],
+[2,"La ecuación hidrostática expresa el equilibrio entre la FGP vertical y la gravedad.",true,"∂p/∂z = −ρg."],
+[2,"La ecuación hidrostática solo es válida si la densidad del aire es constante con la altura.",false,"Vale para cualquier perfil de densidad: ρ es la densidad local a cada altura."],
+[2,"La aproximación hidrostática es adecuada para simular tormentas convectivas a resoluciones inferiores a 5 km.",false,"Para convección, tormentas u orografía compleja (< 5 km) se usan modelos no hidrostáticos."],
+[2,"La presión en un nivel equivale al peso, por unidad de superficie, de la columna de aire que hay por encima.",true,"p(z) = ∫ ρ g dz desde z hasta el tope."],
+[2,"La masa de una columna de aire entre dos niveles se puede calcular conociendo solo la diferencia de presión entre ellos.",true,"m = Δp / g₀, sin necesidad de conocer el perfil de densidad."],
+[2,"Si la atmósfera tuviera densidad constante igual a la de superficie, mediría unos 80 km de espesor.",false,"Mediría unos 8 km: Δz = p₀/(ρ₀ g₀) ≈ 8,2 km."],
+[2,"La ecuación barométrica supone temperatura y gravedad constantes.",true,"Con esas hipótesis la presión decae exponencialmente: p = p₀ e^(−z/H)."],
+[2,"Una altura de escala mayor implica que la presión disminuye más rápidamente con la altura.",false,"Al revés: con H mayor la presión cae más despacio."],
+[2,"La altura de escala aumenta al aumentar la temperatura.",true,"H = RT/g: el aire caliente está menos comprimido."],
+[2,"Aproximadamente la mitad de la masa de la atmósfera se encuentra por debajo del nivel de 500 hPa.",true,"La masa por encima de un nivel es p/g₀: por encima de 500 hPa queda la mitad."],
+[2,"Los gases más pesados tienen mayor altura de escala, por lo que dominan en las capas altas.",false,"Hᵢ = R*T/(gMᵢ): los pesados tienen H menor y decaen antes; los ligeros dominan arriba."],
+[2,"El geopotencial es el trabajo necesario para elevar 1 kg de aire desde el nivel del mar hasta una altura z.",true,"Φ = ∫ g dz, en J/kg = m²/s²."],
+[2,"La altura geopotencial y la altura geométrica difieren varios kilómetros en la troposfera.",false,"Como g varía poco en los primeros km, Z ≈ z con muy buena aproximación."],
+[2,"La altura geopotencial crece más deprisa que la altura geométrica al subir.",false,"Crece más despacio, porque g disminuye con la altura."],
+[2,"El espesor entre dos superficies isobáricas es proporcional a la temperatura media de la capa.",true,"Ecuación hipsométrica: ΔZ = (R_d T̄ / g₀) ln(p₁/p₂)."],
+[2,"Una columna de aire frío tiene un espesor 1000–500 hPa mayor que una de aire cálido.",false,"El aire cálido ocupa más: espesores grandes indican aire cálido."],
+[2,"A igual temperatura media, el espesor entre 200 y 100 hPa es igual al espesor entre 1000 y 500 hPa.",true,"Solo cuenta el cociente p₁/p₂, que es 2 en ambos casos."],
+[2,"La humedad aumenta el espesor geopotencial de una capa.",true,"Aumenta la temperatura virtual, y el espesor es proporcional a T̄_v."],
+[2,"La temperatura virtual es siempre menor que la temperatura real.",false,"Es siempre mayor o igual: T_v ≈ T(1 + 0,61q)."],
+[2,"En meteorología se usa la presión como coordenada vertical, entre otras razones, porque simplifica las ecuaciones.",true,"Por ejemplo, el viento geostrófico en isobáricas no depende de ρ."],
+[2,"La presión medida en una estación de montaña se compara directamente con la de una costera, sin corrección.",false,"Hay que reducirla al nivel del mar para quitar el efecto de la altitud."],
+[2,"En los mapas de altura se representan isohipsas sobre una superficie de presión constante.",true,"Por ejemplo, la altura geopotencial de 500 hPa en dam."],
+[2,"Las isohipsas son líneas de igual presión sobre un nivel de altura constante.",false,"Eso son isobaras. Las isohipsas unen puntos de igual altura geopotencial sobre una superficie isobárica."],
+[2,"En un mapa de espesor 1000–500 hPa, un valor de 580 dam indica aire relativamente cálido.",true,"Unos 580 dam indican aire cálido; unos 520 dam, aire frío."],
+[2,"En el análisis de escala sinóptico, la FGP horizontal y la fuerza de Coriolis son del orden de 10⁻³ m/s².",true,"El resto de términos horizontales son al menos 10 veces menores."],
+[2,"En el análisis de escala vertical, la aceleración vertical es del mismo orden que la gravedad.",false,"dw/dt ~ 10⁻⁸ m/s², frente a g ~ 10 m/s²; por eso vale la hidrostática."],
+[2,"1 atm equivale a 1013,25 hPa.",true,"También a 760 mmHg."],
+[2,"El viento geostrófico expresado en coordenadas isobáricas no depende de la densidad.",true,"v_g = (g₀/f) k̂ × ∇_p Z: no aparece ρ."],
+[2,"La densidad del aire decrece con la altura siguiendo la misma exponencial que la presión cuando la temperatura es constante.",true,"ρ = p/(RT): con T constante, ρ ∝ p, y ρ = ρ₀ e^(−z/H)."],
+// ---- TEMA 3 ----
+[3,"A igual presión y temperatura, el aire húmedo es menos denso que el aire seco.",true,"El vapor (18 g/mol) es más ligero que el aire seco (28,96 g/mol)."],
+[3,"El vapor de agua tiene una masa molar mayor que la del aire seco.",false,"18 g/mol frente a 28,96 g/mol: es más ligero."],
+[3,"ε = R_d/R_v vale aproximadamente 0,622.",true,"También es M_v/M_d."],
+[3,"La razón de mezcla es la masa de vapor dividida entre la masa total de aire húmedo.",false,"Esa es la humedad específica. La razón de mezcla divide entre la masa de aire seco."],
+[3,"En condiciones atmosféricas habituales, la humedad específica y la razón de mezcla son casi iguales.",true,"q = w/(1 + w) y w ≪ 1, así que q ≈ w."],
+[3,"La presión de vapor suele ser del mismo orden de magnitud que la presión total del aire.",false,"e va de 0 a unos 40 hPa frente a ~1000 hPa: e ≪ p."],
+[3,"La ley de Dalton establece que la presión total de una mezcla de gases es la suma de sus presiones parciales.",true,"p = p_d + e."],
+[3,"La constante de una mezcla de gases es la media aritmética simple de las constantes de cada gas.",false,"Es una media ponderada por la masa de cada gas: R = Σ mᵢRᵢ / Σ mᵢ."],
+[3,"La temperatura virtual es la temperatura que debería tener el aire seco para tener la misma densidad que el aire húmedo.",true,"Definición de las diapositivas."],
+[3,"Un aumento de 10 g/kg de humedad específica reduce la densidad del aire en torno a un 0,6 %.",true,"Δρ/ρ ≈ −0,61q = −0,61 · 0,01."],
+[3,"El aire húmedo tiende a ascender porque está más caliente que el aire seco que lo rodea.",false,"Flota porque es menos denso, no porque esté más caliente."],
+[3,"Según la ley de Joule, la energía interna de un gas ideal depende solo de su temperatura.",true,"E = E(T)."],
+[3,"El calor específico a volumen constante es mayor que el calor específico a presión constante.",false,"c_p > c_v: c_p = c_v + R."],
+[3,"Para un gas ideal se cumple que c_p − c_v = R.",true,"Para aire seco: 1005 − 718 = 287."],
+[3,"A presión constante, parte del calor aportado a un gas se emplea en el trabajo de expansión.",true,"Por eso hace falta más calor para subir 1 K que a volumen constante."],
+[3,"En un proceso adiabático el sistema intercambia calor con su entorno.",false,"Adiabático significa dQ = 0."],
+[3,"Una parcela que asciende adiabáticamente se enfría porque se expande y realiza trabajo sobre el entorno.",true,"La energía del trabajo sale de su energía interna."],
+[3,"El gradiente adiabático seco vale unos 6,5 K/km.",false,"Vale g/c_p ≈ 9,8 K/km. 6,5 K/km es el gradiente ambiental medio."],
+[3,"El gradiente adiabático seco se calcula como g/c_p.",true,"9,81 / 1005 ≈ 0,0098 K/m."],
+[3,"Una parcela húmeda no saturada se enfría algo más despacio que una seca al ascender.",true,"El vapor aumenta c_p (1850 > 1005), así que Γ = g/c_p es algo menor (≈9,6 K/km con 2 %)."],
+[3,"El calor latente de vaporización del agua es menor que el de fusión.",false,"L_v ≈ 2,5·10⁶ J/kg es unas 7 veces mayor que L_f ≈ 3,34·10⁵ J/kg."],
+[3,"La condensación del vapor de agua libera calor latente al aire.",true,"Calor latente de condensación = −L_v (lo cede la sustancia)."],
+[3,"La temperatura potencial se conserva en los procesos adiabáticos.",true,"Es la «etiqueta» de la parcela mientras no haya calentamiento diabático."],
+[3,"La temperatura potencial es la temperatura que tendría una parcela llevada adiabáticamente hasta 500 hPa.",false,"La referencia es 1000 hPa: θ = T(1000/p)^0,286."],
+[3,"A 1000 hPa la temperatura potencial coincide con la temperatura.",true,"El factor (1000/p) vale 1."],
+[3,"Si el gradiente ambiental es menor que el adiabático seco (Γ < Γ_d), la atmósfera es inestable.",false,"Γ < Γ_d es estable: la parcela queda más fría que el entorno y vuelve."],
+[3,"Si el gradiente ambiental es mayor que el adiabático seco, la atmósfera es inestable.",true,"El entorno se enfría más rápido que la parcela, que queda más caliente y sigue subiendo."],
+[3,"Si la temperatura potencial del ambiente aumenta con la altura, la estratificación es estable.",true,"dθ/dz > 0: estable."],
+[3,"Una capa con dθ/dz < 0 es estable.",false,"dθ/dz < 0 es inestable (superadiabática)."],
+[3,"Un aire bien mezclado verticalmente tiene temperatura potencial constante con la altura.",true,"Estratificación neutra: dθ/dz = 0, Γ = Γ_d."],
+[3,"Una inversión térmica es una capa muy estable.",true,"Γ < 0, muy por debajo de Γ_d."],
+[3,"Calentar el aire cerca del suelo hace la atmósfera más estable.",false,"Calentar abajo o enfriar arriba aumenta Γ y la hace más inestable."],
+[3,"El enfriamiento de la superficie en una noche despejada favorece una estratificación estable.",true,"Puede llegar a formar una inversión radiativa."],
+[3,"La atmósfera presenta con frecuencia perfiles superadiabáticos en toda la troposfera.",false,"Es raro; solo ocurre muy cerca del suelo en días cálidos. Normalmente el ascenso debe ser forzado."],
+[3,"Las inversiones de subsidencia son típicas de los anticiclones.",true,"El aire que desciende se calienta por compresión."],
+[3,"En el modelo de parcela se supone que su presión es igual a la del entorno.",true,"p_parcela = p_entorno; lo que cambia es su temperatura y densidad."],
+[3,"Un penacho en forma de abanico (fanning) indica una atmósfera inestable.",false,"El fanning indica estratificación estable o inversión: no hay dispersión vertical."],
+[3,"Un penacho que serpentea hacia arriba y hacia abajo (looping) indica estratificación inestable.",true,"Hay mucho movimiento vertical en ambos sentidos."],
+[3,"La humedad específica se expresa en J/kg.",false,"Es un cociente de masas: kg/kg (habitualmente g/kg)."],
+[3,"La constante del aire seco es R_d ≈ 287 J/(kg·K).",true,"R_d = R*/M_d."],
+[3,"El calor específico a presión constante del vapor de agua es menor que el del aire seco.",false,"c_p,v ≈ 1850 J/(kg·K) frente a c_p,d ≈ 1005 J/(kg·K)."],
+[3,"En la ecuación de la temperatura potencial, el exponente R/c_p vale aproximadamente 0,286.",true,"287 / 1005 ≈ 0,286."],
+[3,"La humedad específica y la razón de mezcla son índices de humedad absoluta.",true,"Miden la cantidad de vapor (cocientes de masas)."],
+// ---- TEMA 4 ----
+[4,"Una masa de aire se forma cuando el aire permanece suficiente tiempo sobre una región homogénea.",true,"Por ejemplo, un océano o un continente nevado, con poco gradiente de presión."],
+[4,"Las masas de aire continentales son más húmedas que las marítimas.",false,"Las continentales (c) son secas; las marítimas (m), húmedas."],
+[4,"Una masa de aire cP es fría y seca.",true,"Continental polar."],
+[4,"Una masa de aire mT es fría y seca.",false,"Marítima tropical: cálida y húmeda."],
+[4,"Los frentes no se observan directamente, sino que se diagnostican a partir de campos continuos.",true,"Por eso cada agencia los dibuja en posiciones algo distintas."],
+[4,"En un frente frío, el aire frío avanza y empuja al aire cálido hacia arriba.",true,"Como una cuña: ascenso brusco y nubes de desarrollo vertical."],
+[4,"Los frentes cálidos se desplazan más rápido que los frentes fríos.",false,"Frío: 30–50 km/h. Cálido: 15–30 km/h."],
+[4,"Los frentes cálidos producen precipitaciones intensas, localizadas y de corta duración.",false,"Producen lluvias débiles o moderadas, extensas y duraderas. Las intensas y localizadas son del frente frío."],
+[4,"Al acercarse un frente cálido suele observarse la secuencia de nubes cirros, altoestratos y nimboestratos.",true,"Ci → As → Ns, de 24 a 48 h antes de la lluvia."],
+[4,"Tras el paso de un frente frío el aire es más frío y seco y el cielo suele despejar.",true,"Diapositiva 21 del Tema 4."],
+[4,"Un frente ocluido se forma cuando el frente frío alcanza al frente cálido.",true,"El aire cálido queda levantado y desconectado del suelo."],
+[4,"En una Tierra sin rotación habría tres células de circulación por hemisferio.",false,"Sin rotación habría una sola célula. Las tres células aparecen por Coriolis."],
+[4,"Las altas presiones subtropicales se sitúan hacia los 30° de latitud.",true,"Donde desciende la rama de la célula de Hadley."],
+[4,"La ZCIT es una zona de altas presiones y vientos intensos.",false,"Es una zona de bajas presiones, convergencia, ascenso y calmas."],
+[4,"Los alisios del hemisferio norte soplan del noreste.",true,"Van de las altas subtropicales a la ZCIT y Coriolis los desvía hacia el oeste."],
+[4,"Entre 30° y 60° de latitud en el hemisferio sur, los vientos dominantes en superficie son del este.",false,"En ambos hemisferios, entre 30° y 60°, dominan los vientos del oeste."],
+[4,"En la circulación general predomina el movimiento según los paralelos.",true,"Coriolis convierte el flujo norte-sur en flujo este-oeste."],
+[4,"La célula de Ferrel es una célula térmica directa en la que el aire asciende en su lado más cálido.",false,"Es indirecta: desciende a 30° y asciende a 60°, arrastrada por las otras dos."],
+[4,"La célula de Hadley es una circulación térmica directa.",true,"El aire caliente asciende en el ecuador y desciende hacia 30°."],
+[4,"El chorro polar se encuentra sobre el frente polar, entre unos 9 y 11 km de altura.",true,"Con vientos de 200–400 km/h."],
+[4,"El chorro polar sopla habitualmente a unos 30–50 km/h.",false,"Sopla a 200–400 km/h."],
+[4,"Un monzón es un cambio estacional en la dirección del viento.",true,"Del árabe «mausim», estación."],
+[4,"En verano el monzón asiático sopla de la tierra hacia el mar.",false,"En verano sopla del mar a la tierra (húmedo); en invierno, de la tierra al mar (seco)."],
+[4,"La divergencia en altura favorece el ascenso del aire y la formación de una baja en superficie.",true,"Principio de compensación de Dines."],
+[4,"En un anticiclón hay convergencia en superficie y ascenso del aire.",false,"En un anticiclón hay convergencia en altura, descenso y divergencia en superficie."],
+[4,"El nivel de no divergencia se encuentra habitualmente cerca de 500 hPa.",true,"Unos 5,5 km."],
+[4,"El ascenso forzado por convergencia suele ser débil pero de gran escala.",true,"Por ejemplo, en un frente cálido o una zona de bajas presiones."],
+[4,"En el efecto Foehn el aire llega a sotavento más frío y húmedo.",false,"Llega más cálido y seco, tras perder humedad en barlovento."],
+[4,"En la lluvia orográfica la precipitación se concentra en la ladera de barlovento.",true,"Es la ladera que recibe el viento y por la que asciende el aire."],
+[4,"Una dorsal en el mapa de 500 hPa se asocia a una columna de aire relativamente cálida.",true,"Mayor espesor, superficie de 500 hPa más alta."],
+[4,"Una vaguada en el mapa de 500 hPa se asocia a una columna de aire cálido.",false,"Se asocia a aire frío: menor espesor."],
+[4,"En una atmósfera barotrópica el viento geostrófico no varía con la altura.",true,"∇_pT = 0: no hay viento térmico."],
+[4,"En una atmósfera baroclínica las superficies isobáricas coinciden con las de densidad constante.",false,"Eso es barotrópica. En la baroclínica están inclinadas unas respecto a otras."],
+[4,"Los frentes son zonas fuertemente baroclínicas.",true,"Hay un gran gradiente horizontal de temperatura."],
+[4,"La brisa marina sopla de la tierra hacia el mar durante el día.",false,"De día sopla del mar a la tierra; de noche, la brisa terrestre va de la tierra al mar."],
+[4,"Los vientos catabáticos descienden por las laderas durante la noche.",true,"Por enfriamiento radiativo de las laderas."],
+[4,"Los vientos anabáticos son descendentes y favorecen las inversiones en el fondo del valle.",false,"Los anabáticos ascienden de día. Los catabáticos (de noche) favorecen las inversiones."],
+[4,"Una DANA es una depresión aislada en niveles altos con aire frío.",true,"Embolsamiento de aire frío separado de la circulación general."],
+[4,"Una DANA produce siempre lluvias torrenciales.",false,"Necesita además humedad en superficie y un mecanismo que fuerce el ascenso."],
+[4,"Las nubes de Kelvin-Helmholtz indican una cizalladura vertical intensa.",true,"Dos capas a velocidades muy distintas; son indicador de turbulencia."],
+[4,"Un reventón (downburst) produce divergencia del viento en superficie.",true,"La corriente descendente se abre al llegar al suelo."],
+[4,"El chorro de bajo nivel se sitúa cerca de la tropopausa.",false,"Está a pocos cientos de metros, sobre una inversión cercana al suelo."],
+[4,"Las ondas de montaña se producen cuando un flujo estable atraviesa el relieve.",true,"Pueden generar nubes lenticulares y turbulencia."],
+[4,"La circulación de Walker es una circulación este-oeste sobre el Pacífico ecuatorial.",true,"Es zonal, a diferencia de la de Hadley (meridional)."],
+[4,"En la circulación de Walker el aire asciende sobre el Pacífico oriental, frente a Sudamérica.",false,"Asciende en el oeste (agua cálida, Indonesia) y desciende en el este."],
+[4,"Los anticiclones suelen ser más grandes que las depresiones.",true,"Diapositiva 43 del Tema 4."],
+[4,"Un mesociclón es una borrasca extratropical de escala sinóptica.",false,"Es una supercélula (tormenta convectiva) en rotación: mesoescala."],
+[4,"La subsidencia anticiclónica puede crear una inversión que atrapa los contaminantes.",true,"Es la situación típica de episodios de smog."],
+[4,"El frente polar separa el aire frío polar del aire templado subtropical.",true,"Su fuerte gradiente térmico define la posición del chorro polar."],
+[4,"Los vientos se nombran por la dirección hacia la que soplan.",false,"Se nombran por la dirección de la que vienen: un viento del NE viene del noreste."],
+[4,"La ZCIT se desplaza estacionalmente siguiendo al sol.",true,"Se desplaza hacia el hemisferio en verano."]
+];
+
+const MC = [
+// ---- TEORÍA TEMA 1 ----
+{t:1,q:"¿Qué explica que la temperatura aumente con la altura en la estratosfera?",o:["La absorción de radiación ultravioleta por el ozono","La emisión de radiación infrarroja por el vapor de agua","El calor latente que liberan las nubes altas","La conducción de calor desde la tropopausa"],e:"El ozono absorbe UV solar (ciclo de Chapman) y calienta la estratosfera."},
+{t:1,q:"¿En qué región es más fría la tropopausa?",o:["En los trópicos","En los polos","En las latitudes medias","Es igual en todas las latitudes"],e:"En el trópico está a 16–18 km y alcanza unos −80 °C."},
+{t:1,q:"¿Cuál es la zona más fría del perfil de temperatura de la atmósfera estándar?",o:["La mesopausa","La tropopausa","La estratopausa","La base de la termosfera"],e:"Hacia 85 km, unos 180 K."},
+{t:1,q:"¿Cuál de estos NO es un componente del sistema climático?",o:["La magnetosfera","La criosfera","La litosfera","La biosfera"],e:"Los cinco son atmósfera, hidrosfera, criosfera, litosfera y biosfera."},
+{t:1,q:"¿Cuál es el tiempo de residencia aproximado del vapor de agua en la atmósfera?",o:["Unos 10 días","Unos 10 años","Unos 100 años","Unos pocos minutos"],e:"Por eso su concentración es tan variable."},
+{t:1,q:"¿Cómo es el ciclo estacional del CO₂ medido en Mauna Loa?",o:["Máximo en primavera y mínimo en otoño","Máximo en otoño y mínimo en primavera","Máximo en invierno y mínimo en verano","No muestra un ciclo estacional apreciable"],e:"La fotosíntesis del verano boreal reduce el CO₂ hasta el otoño."},
+{t:1,q:"¿Qué caracteriza a la heterosfera?",o:["Los gases se estratifican según su masa molecular","La turbulencia mantiene constante la composición","El ozono alcanza su máxima concentración","La temperatura es constante con la altura"],e:"Por encima de ~100 km domina la difusión molecular."},
+{t:1,q:"Una tormenta convectiva de unos 20 km que dura unas horas pertenece a la…",o:["Mesoescala","Escala sinóptica","Escala planetaria","Microescala"],e:"Mesoescala: 1–100 km, horas a días."},
+{t:1,q:"¿Qué mantiene el chorro de latitudes medias («eddy-driven»)?",o:["Las borrascas y los anticiclones de latitudes medias","El momento angular de la rama alta de la célula de Hadley","El calentamiento por ozono en la baja estratosfera","El contraste térmico entre tierra y mar en verano"],e:"Los «eddies» transportan momento y lo concentran en el chorro."},
+{t:1,q:"¿Por qué disminuye la temperatura con la altura en la troposfera?",o:["Porque el aire se calienta sobre todo desde la superficie","Porque el ozono absorbe más radiación cerca del suelo","Porque el aire conduce el calor con mucha eficiencia","Porque la presión del aire aumenta con la altura"],e:"El Sol calienta el suelo y este calienta el aire desde abajo."},
+{t:1,q:"¿Qué fracción aproximada de la masa atmosférica está en la troposfera?",o:["Entre un 70 y un 80 %","Alrededor de un 10 %","Alrededor de un 50 %","Más de un 99,9 %"],e:"La mitad está por debajo de 500 hPa y el 99,9 % por debajo de 1 hPa."},
+{t:1,q:"¿Cuál es el tercer gas más abundante del aire seco?",o:["Argón","Dióxido de carbono","Vapor de agua","Neón"],e:"N₂ 78 %, O₂ 21 %, Ar 0,93 %."},
+// ---- TEORÍA TEMA 2 ----
+{t:2,q:"En el hemisferio norte, el viento geostrófico sopla…",o:["Paralelo a las isobaras, con las bajas presiones a su izquierda","Paralelo a las isobaras, con las bajas presiones a su derecha","Perpendicular a las isobaras, de las altas a las bajas presiones","Perpendicular a las isobaras, de las bajas a las altas presiones"],e:"Equilibrio FGP–Coriolis; en el HS las bajas quedan a la derecha."},
+{t:2,q:"El balance geostrófico es el equilibrio entre…",o:["La FGP horizontal y la fuerza de Coriolis","La FGP vertical y la fuerza de la gravedad","La fuerza de Coriolis y la fricción","La gravedad y la fuerza centrífuga"],e:"Del análisis de escala: ambos términos son ~10⁻³ m/s²."},
+{t:2,q:"La ecuación hidrostática expresa el equilibrio entre…",o:["La FGP vertical y la gravedad","La FGP horizontal y la fuerza de Coriolis","La gravedad y la fuerza de Coriolis","La fricción y la FGP vertical"],e:"∂p/∂z = −ρg."},
+{t:2,q:"¿Qué hipótesis se hace para obtener la ecuación barométrica p = p₀e^(−z/H)?",o:["Temperatura y gravedad constantes","Densidad constante con la altura","Presión constante con la altura","Gradiente térmico de 6,5 K/km"],e:"Se combina hidrostática y gas ideal con T y g constantes."},
+{t:2,q:"El espesor geopotencial entre 1000 y 500 hPa depende de…",o:["La temperatura virtual media de la capa","La presión medida en la superficie","La velocidad del viento geostrófico","La latitud a través del parámetro de Coriolis"],e:"ΔZ = (R_d T̄_v / g₀) ln(p₁/p₂)."},
+{t:2,q:"¿En qué unidades se expresa el geopotencial Φ?",o:["m²/s²","m/s²","kg/m²","J/(kg·K)"],e:"J/kg = m²/s². La altura geopotencial Z = Φ/g₀ va en m."},
+{t:2,q:"¿Por qué se usa la presión como coordenada vertical en meteorología?",o:["Porque las ecuaciones se simplifican y ρ desaparece del viento geostrófico","Porque la presión aumenta de forma lineal al subir en la troposfera","Porque los radiosondeos modernos no pueden medir la altura","Porque la densidad es constante sobre cualquier superficie isobárica"],e:"Además, sobre una isobárica hay casi la misma masa de aire por encima."},
+{t:2,q:"¿A qué altura aproximada se encuentra el nivel de 850 hPa?",o:["Unos 1500 m","Unos 5500 m","Unos 9000 m","Unos 150 m"],e:"850 hPa ≈ 150 dam; 500 hPa ≈ 550 dam; 300 hPa ≈ 900 dam."},
+{t:2,q:"¿Cómo depende el parámetro de Coriolis de la latitud φ?",o:["Del seno de la latitud","Del coseno de la latitud","De la tangente de la latitud","No depende de la latitud"],e:"f = 2Ω sin φ."},
+{t:2,q:"Según la ley de Dalton aplicada en la vertical, un gas más pesado…",o:["Tiene menor altura de escala y decae antes con la altura","Tiene mayor altura de escala y domina en las capas altas","Tiene la misma altura de escala que los demás gases","Tiene una altura de escala que no depende de T"],e:"Hᵢ = R*T/(g Mᵢ)."},
+{t:2,q:"Comparado con el viento geostrófico, el viento cerca de la superficie es…",o:["Más débil y cruza las isobaras hacia las bajas presiones","Más fuerte y sopla paralelo a las isobaras","Igual en módulo y en dirección","Más débil y cruza las isobaras hacia las altas presiones"],e:"La fricción lo frena y debilita Coriolis."},
+{t:2,q:"¿Para qué se necesitan modelos no hidrostáticos?",o:["Para convección y tormentas a resoluciones de menos de 5 km","Para la circulación sinóptica a resoluciones de más de 10 km","Para reducir la presión de una estación al nivel del mar","Para representar la estratosfera en los modelos climáticos"],e:"Cuando las aceleraciones verticales ya no son despreciables."},
+{t:2,q:"¿Qué ocurre con la fuerza de Coriolis en el balance geostrófico?",o:["Es opuesta a la FGP y perpendicular al viento","Es paralela al viento y del mismo sentido","Es perpendicular a la FGP y paralela al viento","Es nula porque el viento no se acelera"],e:"Ambas fuerzas son perpendiculares al viento y opuestas entre sí."},
+// ---- TEORÍA TEMA 3 ----
+{t:3,q:"¿Cómo es la temperatura virtual respecto a la temperatura real?",o:["Siempre igual o mayor","Siempre menor","Igual a la temperatura de rocío","Independiente de la humedad"],e:"T_v ≈ T(1 + 0,61q) ≥ T."},
+{t:3,q:"La humedad específica q se define como…",o:["Masa de vapor / masa total de aire húmedo","Masa de vapor / masa de aire seco","Presión de vapor / presión total","Masa de vapor / volumen de aire"],e:"m_v / (m_d + m_v). La razón de mezcla divide entre m_d."},
+{t:3,q:"El gradiente adiabático seco Γ_d es igual a…",o:["g / c_p","c_p / g","R / c_p","g · c_p"],e:"9,81 / 1005 ≈ 9,8 K/km."},
+{t:3,q:"¿En qué tipo de proceso se conserva la temperatura potencial?",o:["Adiabático","Isotermo","Isobárico","Con condensación"],e:"Sin intercambio de calor, θ no cambia."},
+{t:3,q:"Si la temperatura potencial del ambiente aumenta con la altura, la estratificación es…",o:["Estable","Inestable","Neutra","Superadiabática"],e:"dθ/dz > 0: estable."},
+{t:3,q:"¿Por qué c_p es mayor que c_v en un gas ideal?",o:["A p constante, parte del calor se usa en expandir el gas","A V constante, el gas hace más trabajo de expansión","A p constante, el gas pierde energía interna","La ley de Joule solo vale a volumen constante"],e:"c_p = c_v + R."},
+{t:3,q:"Un penacho de chimenea en forma de abanico (fanning) indica…",o:["Estratificación estable o inversión","Estratificación inestable","Estratificación neutra","Inestable abajo y estable arriba"],e:"No hay dispersión vertical."},
+{t:3,q:"Un radiosondeo mide un gradiente ambiental de 12 K/km. La capa es…",o:["Inestable","Estable","Neutra","Una inversión"],e:"Γ = 12 > Γ_d = 9,8 K/km."},
+{t:3,q:"¿Cuál de estos calores latentes del agua es el mayor?",o:["El de sublimación","El de vaporización","El de fusión","Son los tres iguales"],e:"L_s ≈ L_f + L_v ≈ 2,83·10⁶ J/kg."},
+{t:3,q:"Una inversión radiativa se forma típicamente por…",o:["El enfriamiento del suelo en noches despejadas","El descenso de aire en un anticiclón","El calentamiento solar intenso del suelo","El paso de un frente frío"],e:"El descenso anticiclónico produce la inversión de subsidencia."},
+{t:3,q:"¿Cuál de estos NO es un mecanismo que fuerce el ascenso del aire?",o:["La subsidencia anticiclónica","La orografía","La convergencia","Los frentes"],e:"La subsidencia es descenso. Los otros, junto con la convección, fuerzan el ascenso."},
+{t:3,q:"¿Qué ocurre con la densidad del aire cuando aumenta su humedad específica, a igual p y T?",o:["Disminuye","Aumenta","No cambia","Depende del viento"],e:"Δρ/ρ ≈ −0,61q."},
+// ---- TEORÍA TEMA 4 ----
+{t:4,q:"¿Qué diferencia un frente frío de un frente cálido?",o:["El frío avanza más rápido y da lluvias más intensas y localizadas","El cálido avanza más rápido y da lluvias más intensas","Ambos avanzan igual, pero el frío da lluvias más débiles","El cálido genera nubes de gran desarrollo vertical"],e:"Frío: 30–50 km/h, Cb. Cálido: 15–30 km/h, nubes estratiformes."},
+{t:4,q:"¿De dónde soplan los alisios en el hemisferio norte?",o:["Del noreste","Del sureste","Del oeste","Del noroeste"],e:"En el HS soplan del sureste."},
+{t:4,q:"Entre 30° y 60° de latitud, los vientos dominantes en superficie son…",o:["Del oeste en ambos hemisferios","Del este en ambos hemisferios","Del oeste en el HN y del este en el HS","Del norte en ambos hemisferios"],e:"Los «westerlies»."},
+{t:4,q:"¿Cuál es la estructura vertical de una borrasca?",o:["Convergencia abajo, ascenso y divergencia arriba","Divergencia abajo, descenso y convergencia arriba","Convergencia abajo y arriba, con descenso","Divergencia abajo y arriba, con ascenso"],e:"Principio de Dines; nivel de no divergencia ~500 hPa."},
+{t:4,q:"¿Qué es el efecto Foehn?",o:["Un viento cálido y seco que baja por sotavento","Un viento frío y húmedo que sube por barlovento","Un viento cálido y húmedo que sube por sotavento","Una brisa nocturna que baja por el valle"],e:"El aire pierde humedad en barlovento y se calienta al descender."},
+{t:4,q:"Una atmósfera barotrópica se caracteriza por…",o:["ρ = ρ(p) y un viento geostrófico que no varía con la altura","ρ = ρ(p,T) y cizalladura vertical del viento geostrófico","Densidad constante y presión que no varía con la altura","ρ = ρ(T) y superficies isobáricas verticales"],e:"∇_pT = 0: no hay viento térmico."},
+{t:4,q:"¿Qué es una DANA?",o:["Una depresión aislada en niveles altos con aire frío","Un anticiclón cálido en superficie sin reflejo en altura","Una borrasca tropical que gira en sentido horario","Un chorro de bajo nivel asociado a la brisa"],e:"En inglés, «cut-off low»."},
+{t:4,q:"¿Qué es un viento catabático?",o:["Un viento que baja por las laderas de noche","Un viento que sube por las laderas de día","Un viento del mar a la tierra durante el día","Un viento que cambia de dirección con la estación"],e:"Por enfriamiento radiativo de las laderas."},
+{t:4,q:"En verano, el monzón asiático sopla…",o:["Del mar a la tierra, cargado de humedad","De la tierra al mar, frío y seco","Paralelo a la costa, sin cambio estacional","Del ecuador al polo por encima de la tropopausa"],e:"El continente se calienta más y se forma una baja térmica."},
+{t:4,q:"En el mapa de 500 hPa, una dorsal corresponde a…",o:["Isohipsas curvadas hacia el polo y una columna cálida","Isohipsas curvadas hacia el ecuador y una columna fría","Una zona de bajas presiones con frentes","La ZCIT con convección profunda"],e:"Mayor espesor por la hipsométrica."},
+{t:4,q:"¿Cómo es una masa de aire mP?",o:["Templada, húmeda e inestable","Muy fría, seca y estable","Cálida y seca","Muy cálida, muy húmeda y estable"],e:"Marítima polar."},
+{t:4,q:"¿Dónde se sitúa el chorro de bajo nivel?",o:["A pocos cientos de metros, sobre una inversión cercana al suelo","Cerca de la tropopausa, justo encima del frente polar","En la estratosfera, asociado al vórtice polar","En la ZCIT, en el centro de la convección"],e:"Sopla a 50–130 km/h y transporta humedad y calor."},
+{t:4,q:"¿Qué condiciones favorecen la brisa marina?",o:["Contraste tierra-mar de unos 5 °C o más y fondo sinóptico débil","Fuerte gradiente de presión sinóptico y cielo cubierto","Mar más cálido que la tierra durante el día","La presencia de un frente frío sobre la costa"],e:"Diapositiva 49 del Tema 4."},
+{t:4,q:"Las nubes de Kelvin-Helmholtz se forman por…",o:["Una cizalladura vertical fuerte entre dos capas","Un flujo estable que atraviesa una cordillera","La convergencia de los alisios en el ecuador","La subsidencia en el centro de un anticiclón"],e:"Indican turbulencia."},
+{t:4,q:"En la circulación de Walker el aire…",o:["Asciende en el Pacífico occidental y desciende en el oriental","Asciende en el Pacífico oriental y desciende en el occidental","Asciende hacia 30° y desciende en el ecuador","Asciende en los polos y desciende hacia 60°"],e:"Asciende sobre el agua cálida acumulada por los alisios (Indonesia)."},
+{t:4,q:"¿Qué célula de la circulación general es indirecta?",o:["La de Ferrel","La de Hadley","La polar","Ninguna, las tres son directas"],e:"Desciende a 30° y asciende a 60°."},
+{t:4,q:"Las isobaras del HN van de oeste a este y la presión disminuye hacia el norte. ¿Hacia dónde sopla el viento geostrófico?",o:["Hacia el este (viento del oeste)","Hacia el oeste (viento del este)","Hacia el norte, hacia la baja","Hacia el sur, hacia la alta"],e:"Paralelo a las isobaras con la baja a la izquierda."},
+// ---- PROBLEMAS ----
+{t:2,p:1,q:"Calcula la masa (por m²) de la columna de aire comprendida entre 1000 y 700 hPa (g₀ = 9,81 m/s²).",o:["≈ 3060 kg/m²","≈ 7140 kg/m²","≈ 30,6 kg/m²","≈ 10 190 kg/m²"],e:"m = Δp/g₀ = 30 000 Pa / 9,81 ≈ 3058 kg/m². (Δp en Pa.)"},
+{t:2,p:1,q:"Si la presión media en superficie fuese 1000 hPa, ¿cuál sería la masa total de la atmósfera? (R_T = 6370 km)",o:["≈ 5,2·10¹⁸ kg","≈ 5,2·10¹⁶ kg","≈ 1,3·10¹⁸ kg","≈ 5,2·10²¹ kg"],e:"M = (p₀/g₀)·4πR_T² = (10⁵/9,81)·4π(6,37·10⁶)² ≈ 5,2·10¹⁸ kg."},
+{t:2,p:1,q:"¿Qué espesor tendría una atmósfera homogénea con p₀ = 1013,25 hPa y ρ₀ = 1,225 kg/m³?",o:["≈ 8,4 km","≈ 84 m","≈ 1,2 km","≈ 11 km"],e:"Δz = p₀/(ρ₀g₀) = 101 325/(1,225·9,81) ≈ 8430 m."},
+{t:2,p:1,q:"Calcula la altura de escala del aire seco a 250 K.",o:["≈ 7,3 km","≈ 8,4 km","≈ 212 m","≈ 6,1 km"],e:"H = R_d T/g = 287·250/9,81 ≈ 7314 m. (Con R* = 8,314 sin dividir por M salen 212 m.)"},
+{t:2,p:1,q:"Con una altura de escala de 8 km, ¿a qué altura la presión es la cuarta parte de la de superficie?",o:["≈ 11,1 km","≈ 32 km","≈ 5,5 km","≈ 4,8 km"],e:"z = H ln(p₀/p) = 8·ln 4 ≈ 11,1 km."},
+{t:2,p:1,q:"Con H = 8 km, ¿qué fracción de la masa atmosférica queda por encima de 16 km?",o:["≈ 13,5 %","≈ 86,5 %","≈ 50 %","≈ 25 %"],e:"m/m_total = p/p₀ = e^(−16/8) = e^(−2) ≈ 0,135."},
+{t:2,p:1,q:"Con p₀ = 1000 hPa y H = 8 km, ¿qué presión hay a 3 km según la ecuación barométrica?",o:["≈ 687 hPa","≈ 625 hPa","≈ 1455 hPa","≈ 945 hPa"],e:"p = 1000·e^(−3/8) ≈ 687 hPa."},
+{t:2,p:1,q:"¿Cuál es el espesor de la capa 1000–500 hPa si su temperatura virtual media es 270 K?",o:["≈ 5475 m","≈ 7899 m","≈ 2378 m","≈ 5070 m"],e:"ΔZ = (287·270/9,81)·ln 2 ≈ 5475 m."},
+{t:2,p:1,q:"Calcula el espesor de la capa 850–700 hPa con una temperatura virtual media de 275 K.",o:["≈ 1560 m","≈ 680 m","≈ 8050 m","≈ 1215 m"],e:"ΔZ = (287·275/9,81)·ln(850/700) ≈ 8045·0,194 ≈ 1562 m."},
+{t:2,p:1,q:"Una estación mide 1010 hPa. ¿Qué espesor tiene la capa hasta 1000 hPa si T_v = 10 °C?",o:["≈ 82 m","≈ 8280 m","≈ 2,9 m","≈ 36 m"],e:"ΔZ = (287·283,15/9,81)·ln(1010/1000) ≈ 82 m. (T en K.)"},
+{t:2,p:1,q:"Con una temperatura media de 250 K, ¿a qué altura está aproximadamente el nivel de 500 hPa (superficie a 1000 hPa)?",o:["≈ 5070 m","≈ 7314 m","≈ 2200 m","≈ 5480 m"],e:"Z = (287·250/9,81)·ln 2 ≈ 5070 m."},
+{t:2,p:1,q:"¿Qué masa de aire (por m²) hay por encima del nivel de 500 hPa?",o:["≈ 5100 kg/m²","≈ 51 kg/m²","≈ 10 200 kg/m²","≈ 2550 kg/m²"],e:"m = p/g₀ = 50 000/9,81 ≈ 5097 kg/m²."},
+{t:2,p:1,q:"Con H = 7 km, ¿a qué altura la presión se reduce a la décima parte?",o:["≈ 16,1 km","≈ 70 km","≈ 7,0 km","≈ 4,9 km"],e:"z = H ln 10 = 7·2,303 ≈ 16,1 km."},
+{t:2,p:1,q:"Calcula el parámetro de Coriolis a 45°N (Ω = 7,29·10⁻⁵ s⁻¹).",o:["≈ 1,03·10⁻⁴ s⁻¹","≈ 7,29·10⁻⁵ s⁻¹","≈ 1,46·10⁻⁴ s⁻¹","≈ 5,15·10⁻⁵ s⁻¹"],e:"f = 2Ω sin 45° ≈ 1,03·10⁻⁴ s⁻¹."},
+{t:2,p:1,q:"A 45°N, la presión varía 4 hPa en 200 km y ρ = 1,2 kg/m³. ¿Cuál es la intensidad del viento geostrófico?",o:["≈ 16 m/s","≈ 0,16 m/s","≈ 8 m/s","≈ 32 m/s"],e:"v_g = (Δp/Δn)/(ρf) = (400/200 000)/(1,2·1,03·10⁻⁴) ≈ 16 m/s."},
+{t:2,p:1,q:"Con ρ = 1,2 kg/m³, ¿cuánto vale ∂p/∂z junto a la superficie?",o:["≈ −11,8 Pa/m","≈ −0,12 Pa/m","≈ −118 Pa/m","≈ +11,8 Pa/m"],e:"∂p/∂z = −ρg = −1,2·9,81. Equivale a perder ~1 hPa cada 8,5 m."},
+{t:1,p:1,q:"En superficie hay 20 °C y el gradiente es el de la atmósfera estándar. ¿Qué temperatura hay a 3 km?",o:["≈ 0,5 °C","≈ −9,4 °C","≈ 39,5 °C","≈ 13,5 °C"],e:"T = 20 − 6,5·3 = 0,5 °C. (−9,4 °C saldría con 9,8 K/km.)"},
+{t:1,p:1,q:"¿A qué altura sobre la superficie orbita un satélite geoestacionario? (G = 6,67·10⁻¹¹, M_T = 5,97·10²⁴ kg, T = 24 h)",o:["≈ 36 000 km","≈ 42 000 km","≈ 700 km","≈ 6 400 km"],e:"r = ∛(GM_T T²/4π²) ≈ 42 200 km; z = r − R_T ≈ 35 900 km."},
+{t:1,p:1,q:"La densidad de vapor es 10 g/m³ desde el suelo hasta 2 km y nula por encima. ¿Cuál es el agua precipitable?",o:["20 mm","2 mm","200 mm","0,02 mm"],e:"W = ∫ρ_v dz = 0,010 kg/m³ · 2000 m = 20 kg/m² = 20 mm."},
+{t:2,p:1,q:"Atmósfera estándar (T₀ = 15 °C, p₀ = 1013,25 hPa, Γ = 6,5 K/km, aire seco): ¿qué densidad hay a 5 km?",o:["≈ 0,74 kg/m³","≈ 0,68 kg/m³","≈ 0,90 kg/m³","≈ 1,23 kg/m³"],e:"ρ = ρ₀(T/T₀)^(g/(R_dΓ)−1) = 1,225·(255,65/288,15)^4,26 ≈ 0,74 kg/m³. (0,68 saldría con la barométrica isoterma.)"},
+{t:3,p:1,q:"Aire a 25 °C con una humedad específica de 15 g/kg. ¿Cuál es su temperatura virtual?",o:["≈ 27,7 °C","≈ 25,2 °C","≈ 22,3 °C","≈ 30,5 °C"],e:"T_v = 298,15·(1 + 0,61·0,015) ≈ 300,9 K ≈ 27,7 °C. (T en K y q en kg/kg.)"},
+{t:3,p:1,q:"¿En qué porcentaje cambia la densidad del aire si su humedad específica pasa de 0 a 12 g/kg (misma p y T)?",o:["≈ −0,73 %","≈ +0,73 %","≈ −7,3 %","≈ −1,2 %"],e:"Δρ/ρ ≈ −0,61q = −0,61·0,012 ≈ −0,73 %."},
+{t:3,p:1,q:"Una parcela de aire seco está a 10 °C en el nivel de 850 hPa. ¿Cuál es su temperatura potencial?",o:["≈ 296,6 K","≈ 270,3 K","≈ 283,2 K","≈ 333,1 K"],e:"θ = 283,15·(1000/850)^0,286 ≈ 296,6 K."},
+{t:3,p:1,q:"Una burbuja de aire seco a 15 °C en 900 hPa desciende adiabáticamente hasta 1000 hPa. ¿Qué temperatura alcanza?",o:["≈ 23,8 °C","≈ 6,4 °C","≈ 15,0 °C","≈ 15,5 °C"],e:"T₂ = T₁(p₂/p₁)^0,286 = 288,15·(1000/900)^0,286 ≈ 297,0 K ≈ 23,8 °C."},
+{t:3,p:1,q:"Burbuja de aire seco a 5 °C y 600 hPa que desciende adiabáticamente hasta 900 hPa. ¿Cuál es su temperatura final?",o:["≈ 39,2 °C","≈ −25,5 °C","≈ 5,0 °C","≈ 48,8 °C"],e:"T₂ = 278,15·(900/600)^0,286 ≈ 312,4 K ≈ 39,2 °C. (48,8 °C es su θ en °C.)"},
+{t:3,p:1,q:"Una parcela con un 1 % de vapor (10 g/kg) asciende sin saturarse. ¿Cuál es su gradiente adiabático? (c_p,d = 1005, c_p,v = 1850 J/(kg·K))",o:["≈ 9,7 K/km","≈ 9,8 K/km","≈ 9,9 K/km","≈ 5,3 K/km"],e:"c_p = 0,99·1005 + 0,01·1850 ≈ 1013 J/(kg·K); Γ = 9,81/1013 ≈ 9,68 K/km."},
+{t:3,p:1,q:"Con una razón de mezcla de 8 g/kg y p = 900 hPa, ¿cuál es la presión de vapor?",o:["≈ 11,4 hPa","≈ 7,2 hPa","≈ 4,5 hPa","≈ 114 hPa"],e:"e = p·w/(ε + w) = 900·0,008/0,630 ≈ 11,4 hPa."},
+{t:3,p:1,q:"Calcula la densidad del vapor si e = 15 hPa y T = 25 °C.",o:["≈ 10,9 g/m³","≈ 17,5 g/m³","≈ 0,11 g/m³","≈ 130 g/m³"],e:"ρ_v = e/(R_v T) = 1500/(461,5·298,15) ≈ 0,0109 kg/m³. (17,5 sale usando R_d.)"},
+{t:3,p:1,q:"Con e = 20 hPa y p = 1000 hPa, ¿cuál es aproximadamente la humedad específica?",o:["≈ 12,4 g/kg","≈ 20 g/kg","≈ 32 g/kg","≈ 1,24 g/kg"],e:"q ≈ ε e/p = 0,622·0,02 ≈ 0,0124 kg/kg."},
+{t:3,p:1,q:"¿Qué densidad tiene el aire seco a 900 hPa y 0 °C?",o:["≈ 1,15 kg/m³","≈ 1,29 kg/m³","≈ 0,71 kg/m³","≈ 0,011 kg/m³"],e:"ρ = p/(R_d T) = 90 000/(287·273,15) ≈ 1,148 kg/m³."},
+{t:3,p:1,q:"¿Cuál es la constante R de un aire con un 3 % (en masa) de vapor de agua?",o:["≈ 292 J/(kg·K)","≈ 287 J/(kg·K)","≈ 374 J/(kg·K)","≈ 461 J/(kg·K)"],e:"R = 0,97·287 + 0,03·461,5 ≈ 292 J/(kg·K). (374 sería la media sin ponderar.)"},
+{t:3,p:1,q:"T = 300 K, e = 30 hPa y p = 1000 hPa. ¿Cuál es la temperatura virtual?",o:["≈ 303,4 K","≈ 309,3 K","≈ 300,0 K","≈ 296,6 K"],e:"T_v = T/[1 − (e/p)(1 − ε)] = 300/(1 − 0,03·0,378) ≈ 303,4 K."},
+{t:3,p:1,q:"Una parcela de aire seco tiene −20 °C a 500 hPa. ¿Cuál es su temperatura potencial?",o:["≈ 308,7 K","≈ 207,6 K","≈ 253,2 K","≈ 506,3 K"],e:"θ = 253,15·(1000/500)^0,286 = 253,15·2^0,286 ≈ 308,7 K."},
+{t:3,p:1,q:"Una capa de aire seco muy bien mezclada tiene 25 °C en la base (1000 hPa). ¿Qué temperatura hay en su cima, a 850 hPa?",o:["≈ 11,5 °C","≈ 25,0 °C","≈ 39,2 °C","≈ 23,9 °C"],e:"Bien mezclada: θ constante. T = 298,15·(850/1000)^0,286 ≈ 284,6 K ≈ 11,5 °C."},
+{t:3,p:1,q:"Una burbuja seca sale a 30 °C del suelo. El ambiente sigue T(z) = 25 − 7z (°C, z en km). ¿Hasta dónde sube? (Γ_d = 9,8 K/km)",o:["≈ 1,8 km","≈ 1,0 km","≈ 0,7 km","≈ 5,0 km"],e:"Sube mientras esté más caliente: 30 − 9,8z = 25 − 7z ⇒ z = 5/2,8 ≈ 1,8 km."},
+{t:3,p:1,q:"Una burbuja seca sale a 30 °C del suelo y el ambiente sigue T(z) = 20 + z (°C, z en km). ¿Hasta dónde sube? (Γ_d ≈ 10 K/km)",o:["≈ 0,9 km","≈ 5,0 km","≈ 1,1 km","≈ 2,0 km"],e:"30 − 10z = 20 + z ⇒ z = 10/11 ≈ 0,9 km. El ambiente es una inversión, muy estable."},
+{t:3,p:1,q:"¿Qué gradiente vertical de temperatura hace falta, como mínimo, para que la densidad aumente con la altura (espejismos)?",o:["≈ 34 K/km","≈ 9,8 K/km","≈ 6,5 K/km","≈ 0 K/km"],e:"La densidad crece con z si −dT/dz > g/R_d = 9,81/287 ≈ 0,034 K/m."},
+{t:2,p:1,q:"Espesor 1000–500 hPa cerca del polo: T̄ = −50 °C y q = 1 g/kg. ¿Cuál es su valor?",o:["≈ 4530 m","≈ 6530 m","≈ 1970 m","≈ 5575 m"],e:"T_v ≈ 223,15·1,0006 ≈ 223,3 K; ΔZ = (287·223,3/9,81)·ln 2 ≈ 4528 m."}
+];
+
+/* ---------- LÓGICA ---------- */
+const N_VF = 30, N_MC = 14, N_PROB = 4;
+const PT_VF = 0.1, PT_MC = 0.5;
+const $ = s => document.querySelector(s);
+const fmt = n => n.toFixed(2).replace(".", ",");
+let mode = "exam", exam = null, graded = false;
+
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function temasSel(){ return [...document.querySelectorAll("#temas input:checked")].map(i=>+i.value); }
+
+function build(){
+  const ts = temasSel();
+  const vfPool = VF.filter(v=>ts.includes(v[0]));
+  const probPool = MC.filter(m=>m.p && ts.includes(m.t));
+  const theoPool = MC.filter(m=>!m.p && ts.includes(m.t));
+  // Equilibra verdaderas y falsas: entre 13 y 17 verdaderas por examen
+  const trues = shuffle(vfPool.filter(v=>v[2])), falses = shuffle(vfPool.filter(v=>!v[2]));
+  const n = Math.min(N_VF, vfPool.length);
+  let nT = Math.min(trues.length, Math.max(n - falses.length, Math.round(n/2) + Math.floor(Math.random()*5) - 2));
+  const vf = shuffle(trues.slice(0,nT).concat(falses.slice(0,n-nT))).map(v=>({t:v[0],q:v[1],a:v[2],e:v[3],ans:null}));
+  let probs = shuffle(probPool).slice(0,N_PROB);
+  let theo = shuffle(theoPool).slice(0,N_MC-probs.length);
+  if(theo.length + probs.length < N_MC){ probs = shuffle(probPool).slice(0, N_MC-theo.length); }
+  const mc = shuffle(theo.concat(probs)).map(m=>{
+    const order = shuffle([0,1,2,3]);
+    return {t:m.t,q:m.q,p:!!m.p,e:m.e,opts:order.map(i=>m.o[i]),right:order.indexOf(0),ans:null};
+  });
+  exam = {vf, mc}; graded = false;
+  $("#results").hidden = true; $("#results").innerHTML = "";
+  render();
+}
+
+const temaName = {1:"Tema 1",2:"Tema 2",3:"Tema 3",4:"Tema 4"};
+
+function render(){
+  const lv = $("#list-vf"), lm = $("#list-mc");
+  lv.innerHTML = ""; lm.innerHTML = "";
+  $("#meta-vf").textContent = exam.vf.length + " preguntas · 0,1 pt · los fallos no restan";
+  $("#meta-mc").textContent = exam.mc.length + " preguntas · 0,5 pt · cada fallo resta un acierto";
+  exam.vf.forEach((q,i)=>lv.appendChild(vfItem(q,i)));
+  exam.mc.forEach((q,i)=>lm.appendChild(mcItem(q,i)));
+  progress();
+}
+
+function vfItem(q,i){
+  const li = document.createElement("li"); li.className="q"; li.id="vf-"+i;
+  li.innerHTML = `<div class="q-top"><span class="qnum">${i+1}</span><div class="qtext">${q.q}<div class="tags"><span class="tag">${temaName[q.t]}</span></div></div></div>
+  <div class="vf-btns"><button type="button" data-v="true" aria-pressed="false">Verdadero</button><button type="button" data-v="false" aria-pressed="false">Falso</button></div>`;
+  li.querySelectorAll(".vf-btns button").forEach(b=>b.addEventListener("click",()=>{
+    if(graded || (mode==="prac" && q.ans!==null)) return;
+    const v = b.dataset.v==="true";
+    q.ans = (q.ans===v) ? null : v;
+    li.querySelectorAll(".vf-btns button").forEach(x=>x.setAttribute("aria-pressed", String(q.ans!==null && (x.dataset.v==="true")===q.ans)));
+    if(mode==="prac" && q.ans!==null) revealVF(li,q);
+    progress();
+  }));
+  return li;
+}
+function mcItem(q,i){
+  const li = document.createElement("li"); li.className="q"; li.id="mc-"+i;
+  const L = ["a","b","c","d"];
+  li.innerHTML = `<div class="q-top"><span class="qnum">${i+1}</span><div class="qtext">${q.q}<div class="tags"><span class="tag">${temaName[q.t]}</span>${q.p?'<span class="tag prob">Problema</span>':''}</div></div></div>
+  <div class="opts">${q.opts.map((o,k)=>`<button type="button" class="opt" data-k="${k}" aria-pressed="false"><span class="ol">${L[k]})</span><span>${o}</span></button>`).join("")}</div>
+  <button type="button" class="clear">Dejar en blanco</button>`;
+  li.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>{
+    if(graded || (mode==="prac" && q.ans!==null)) return;
+    q.ans = +b.dataset.k;
+    li.querySelectorAll(".opt").forEach(x=>x.setAttribute("aria-pressed", String(+x.dataset.k===q.ans)));
+    if(mode==="prac") revealMC(li,q);
+    progress();
+  }));
+  li.querySelector(".clear").addEventListener("click",()=>{
+    if(graded || (mode==="prac" && q.ans!==null)) return;
+    q.ans = null; li.querySelectorAll(".opt").forEach(x=>x.setAttribute("aria-pressed","false")); progress();
+  });
+  return li;
+}
+
+function explBox(li, verdict, cls, text){
+  let ex = li.querySelector(".expl"); if(!ex){ ex = document.createElement("div"); ex.className="expl"; li.appendChild(ex); }
+  ex.innerHTML = `<b class="${cls}">${verdict}</b> ${text}`;
+}
+function revealVF(li,q){
+  li.classList.remove("ok","bad","blank");
+  const st = q.ans===null ? "blank" : (q.ans===q.a ? "ok" : "bad");
+  li.classList.add(st);
+  li.querySelectorAll(".vf-btns button").forEach(b=>{
+    const v = b.dataset.v==="true";
+    b.classList.toggle("is-right", v===q.a);
+    b.classList.toggle("is-wrong", q.ans!==null && v===q.ans && v!==q.a);
+  });
+  const sol = q.a ? "Verdadero." : "Falso.";
+  const verdict = st==="ok" ? "Correcto." : st==="bad" ? "Incorrecto." : "En blanco.";
+  explBox(li, verdict, "v-"+st, `Respuesta: ${sol} ${q.e}`);
+}
+function revealMC(li,q){
+  li.classList.remove("ok","bad","blank");
+  const st = q.ans===null ? "blank" : (q.ans===q.right ? "ok" : "bad");
+  li.classList.add(st);
+  li.querySelectorAll(".opt").forEach(b=>{
+    const k = +b.dataset.k;
+    b.classList.toggle("is-right", k===q.right);
+    b.classList.toggle("is-wrong", q.ans!==null && k===q.ans && k!==q.right);
+  });
+  const L = ["a","b","c","d"];
+  const verdict = st==="ok" ? "Correcto." : st==="bad" ? "Incorrecto (resta un acierto)." : "En blanco.";
+  explBox(li, verdict, "v-"+st, `Respuesta: ${L[q.right]}) ${q.opts[q.right]}. ${q.e}`);
+}
+
+function tally(){
+  const vfOk = exam.vf.filter(q=>q.ans!==null && q.ans===q.a).length;
+  const vfBad = exam.vf.filter(q=>q.ans!==null && q.ans!==q.a).length;
+  const mcOk = exam.mc.filter(q=>q.ans!==null && q.ans===q.right).length;
+  const mcBad = exam.mc.filter(q=>q.ans!==null && q.ans!==q.right).length;
+  const ptVF = vfOk*PT_VF;
+  const ptMC = Math.max(0,(mcOk-mcBad))*PT_MC;
+  return {vfOk,vfBad,vfBlank:exam.vf.length-vfOk-vfBad,mcOk,mcBad,mcBlank:exam.mc.length-mcOk-mcBad,ptVF,ptMC,total:ptVF+ptMC};
+}
+
+function progress(){
+  const a = exam.vf.filter(q=>q.ans!==null).length, b = exam.mc.filter(q=>q.ans!==null).length;
+  let txt = `V/F <b>${a}/${exam.vf.length}</b> · Test <b>${b}/${exam.mc.length}</b>`;
+  if(mode==="prac"){ const t = tally(); txt += ` · Nota provisional <b>${fmt(t.total)}</b>`; }
+  $("#prog").innerHTML = txt;
+  $("#grade").textContent = mode==="prac" ? "Ver resumen" : "Corregir examen";
+  $("#grade").disabled = graded;
+}
+
+function grade(){
+  graded = true;
+  exam.vf.forEach((q,i)=>revealVF($("#vf-"+i),q));
+  exam.mc.forEach((q,i)=>revealMC($("#mc-"+i),q));
+  const t = tally();
+  const hist = loadHist(); hist.unshift({d:new Date().toLocaleString("es-ES",{dateStyle:"short",timeStyle:"short"}),n:t.total,vf:t.ptVF,mc:t.ptMC});
+  saveHist(hist.slice(0,10));
+  const r = $("#results");
+  r.innerHTML = `<div class="score-row">
+    <div class="score"><span class="lab">Verdadero o falso</span><span class="val">${fmt(t.ptVF)} / 3</span><span class="det">${t.vfOk} aciertos · ${t.vfBad} fallos · ${t.vfBlank} en blanco</span></div>
+    <div class="score"><span class="lab">Tipo test</span><span class="val">${fmt(t.ptMC)} / 7</span><span class="det">${t.mcOk} aciertos · ${t.mcBad} fallos · ${t.mcBlank} en blanco → ${t.mcOk-t.mcBad} netos</span></div>
+    <div class="score total"><span class="lab">Nota</span><span class="val">${fmt(t.total)} / 10</span><span class="det">${t.total>=5?"Aprobado":"Por debajo de 5"}</span></div>
+  </div>
+  <div class="hist"><b>Últimos intentos en este navegador</b><ol>${loadHist().map(h=>`<li>${h.d} — ${fmt(h.n)} (V/F ${fmt(h.vf)} · test ${fmt(h.mc)})</li>`).join("")}</ol></div>
+  <div><button type="button" class="btn" id="again">Hacer otro examen</button></div>`;
+  r.hidden = false;
+  $("#again").addEventListener("click",()=>{ build(); window.scrollTo({top:0,behavior:"smooth"}); });
+  r.scrollIntoView({behavior:"smooth",block:"start"});
+  progress();
+}
+
+function loadHist(){ try{ return JSON.parse(localStorage.getItem("mf-hist")||"[]"); }catch(e){ return []; } }
+function saveHist(h){ try{ localStorage.setItem("mf-hist", JSON.stringify(h)); }catch(e){} }
+
+function setMode(m){
+  mode = m;
+  $("#mode-exam").setAttribute("aria-pressed", String(m==="exam"));
+  $("#mode-prac").setAttribute("aria-pressed", String(m==="prac"));
+  build();
+}
+$("#mode-exam").addEventListener("click",()=>setMode("exam"));
+$("#mode-prac").addEventListener("click",()=>setMode("prac"));
+$("#new").addEventListener("click",build);
+$("#grade").addEventListener("click",grade);
+document.querySelectorAll("#temas input").forEach(i=>i.addEventListener("change",()=>{
+  if(temasSel().length===0){ i.checked = true; return; }
+  build();
+}));
+build();
+</script>
+</body>
+</html>
