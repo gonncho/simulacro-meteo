@@ -497,7 +497,7 @@ function render(){
 
 function vfItem(q,i){
   const li = document.createElement("li"); li.className="q"; li.id="vf-"+i;
-  li.innerHTML = `<div class="q-top"><span class="qnum">${i+1}</span><div class="qtext">${q.q}<div class="tags"><span class="tag">${temaName[q.t]}</span></div></div></div>
+  li.innerHTML = `<div class="q-top"><span class="qnum">${i+1}</span><div class="qtext">${q.q}</div></div>
   <div class="vf-btns"><button type="button" data-v="true" aria-pressed="false">Verdadero</button><button type="button" data-v="false" aria-pressed="false">Falso</button></div>`;
   li.querySelectorAll(".vf-btns button").forEach(b=>b.addEventListener("click",()=>{
     if(graded || (mode==="prac" && q.ans!==null)) return;
@@ -512,7 +512,7 @@ function vfItem(q,i){
 function mcItem(q,i){
   const li = document.createElement("li"); li.className="q"; li.id="mc-"+i;
   const L = ["a","b","c","d"];
-  li.innerHTML = `<div class="q-top"><span class="qnum">${i+1}</span><div class="qtext">${q.q}<div class="tags"><span class="tag">${temaName[q.t]}</span>${q.p?'<span class="tag prob">Problema</span>':''}</div></div></div>
+  li.innerHTML = `<div class="q-top"><span class="qnum">${i+1}</span><div class="qtext">${q.q}${q.p?'<div class="tags"><span class="tag prob">Problema</span></div>':''}</div></div>
   <div class="opts">${q.opts.map((o,k)=>`<button type="button" class="opt" data-k="${k}" aria-pressed="false"><span class="ol">${L[k]})</span><span>${o}</span></button>`).join("")}</div>
   <button type="button" class="clear">Dejar en blanco</button>`;
   li.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>{
