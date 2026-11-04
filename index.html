@@ -52,6 +52,7 @@ header{display:grid;gap:18px;margin-bottom:26px}
 .chk{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--rule);border-radius:999px;background:var(--surface);cursor:pointer;font-size:.92rem;user-select:none}
 .chk input{accent-color:var(--accent);margin:0}
 .seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg{flex-wrap:wrap}
 .seg button{border:0;background:var(--surface);color:var(--ink);font:inherit;font-size:.92rem;padding:6px 12px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
 .btn{font:inherit;font-weight:600;border-radius:8px;padding:9px 16px;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink)}
@@ -118,12 +119,15 @@ ol.qs{list-style:none;margin:0;padding:0;display:grid;gap:10px}
     <div class="rule-card"><b>Parte 2 · Tipo test</b><span>14 preguntas de 4 opciones, con algún problema. Cada fallo resta un acierto.</span><span class="pts">0,5 pt por acierto neto · máx. 7 pt</span></div>
   </div>
   <div class="controls" role="group" aria-label="Opciones del examen">
-    <div class="ctl-group" id="temas">
-      <span class="ctl-label">Temas</span>
-      <label class="chk"><input type="checkbox" id="t1" value="1" checked> 1 · Estructura</label>
-      <label class="chk"><input type="checkbox" id="t2" value="2" checked> 2 · Presión</label>
-      <label class="chk"><input type="checkbox" id="t3" value="3" checked> 3 · Termodinámica</label>
-      <label class="chk"><input type="checkbox" id="t4" value="4" checked> 4 · Movimiento</label>
+    <div class="ctl-group">
+      <span class="ctl-label">Temario</span>
+      <div class="seg" role="group" aria-label="Temario" id="temas">
+        <button type="button" data-t="all" aria-pressed="true">Todos</button>
+        <button type="button" data-t="1" aria-pressed="false">Tema 1</button>
+        <button type="button" data-t="2" aria-pressed="false">Tema 2</button>
+        <button type="button" data-t="3" aria-pressed="false">Tema 3</button>
+        <button type="button" data-t="4" aria-pressed="false">Tema 4</button>
+      </div>
     </div>
     <div class="ctl-group">
       <span class="ctl-label">Modo</span>
@@ -459,7 +463,8 @@ const fmt = n => n.toFixed(2).replace(".", ",");
 let mode = "exam", exam = null, graded = false;
 
 function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-function temasSel(){ return [...document.querySelectorAll("#temas input:checked")].map(i=>+i.value); }
+let temaSel = "all";
+function temasSel(){ return temaSel==="all" ? [1,2,3,4] : [+temaSel]; }
 
 function build(){
   const ts = temasSel();
@@ -488,8 +493,9 @@ const temaName = {1:"Tema 1",2:"Tema 2",3:"Tema 3",4:"Tema 4"};
 function render(){
   const lv = $("#list-vf"), lm = $("#list-mc");
   lv.innerHTML = ""; lm.innerHTML = "";
-  $("#meta-vf").textContent = exam.vf.length + " preguntas · 0,1 pt · los fallos no restan";
-  $("#meta-mc").textContent = exam.mc.length + " preguntas · 0,5 pt · cada fallo resta un acierto";
+  const scope = temaSel==="all" ? "Todo el temario" : "Solo tema "+temaSel;
+  $("#meta-vf").textContent = scope + " · " + exam.vf.length + " preguntas · 0,1 pt · los fallos no restan";
+  $("#meta-mc").textContent = scope + " · " + exam.mc.length + " preguntas · 0,5 pt · cada fallo resta un acierto";
   exam.vf.forEach((q,i)=>lv.appendChild(vfItem(q,i)));
   exam.mc.forEach((q,i)=>lm.appendChild(mcItem(q,i)));
   progress();
@@ -584,7 +590,7 @@ function grade(){
   exam.vf.forEach((q,i)=>revealVF($("#vf-"+i),q));
   exam.mc.forEach((q,i)=>revealMC($("#mc-"+i),q));
   const t = tally();
-  const hist = loadHist(); hist.unshift({d:new Date().toLocaleString("es-ES",{dateStyle:"short",timeStyle:"short"}),n:t.total,vf:t.ptVF,mc:t.ptMC});
+  const hist = loadHist(); hist.unshift({s:temaSel==="all"?"Todo":"Tema "+temaSel,d:new Date().toLocaleString("es-ES",{dateStyle:"short",timeStyle:"short"}),n:t.total,vf:t.ptVF,mc:t.ptMC});
   saveHist(hist.slice(0,10));
   const r = $("#results");
   r.innerHTML = `<div class="score-row">
@@ -592,7 +598,7 @@ function grade(){
     <div class="score"><span class="lab">Tipo test</span><span class="val">${fmt(t.ptMC)} / 7</span><span class="det">${t.mcOk} aciertos · ${t.mcBad} fallos · ${t.mcBlank} en blanco → ${t.mcOk-t.mcBad} netos</span></div>
     <div class="score total"><span class="lab">Nota</span><span class="val">${fmt(t.total)} / 10</span><span class="det">${t.total>=5?"Aprobado":"Por debajo de 5"}</span></div>
   </div>
-  <div class="hist"><b>Últimos intentos en este navegador</b><ol>${loadHist().map(h=>`<li>${h.d} — ${fmt(h.n)} (V/F ${fmt(h.vf)} · test ${fmt(h.mc)})</li>`).join("")}</ol></div>
+  <div class="hist"><b>Últimos intentos en este navegador</b><ol>${loadHist().map(h=>`<li>${h.d} · ${h.s||"Todo"} — ${fmt(h.n)} (V/F ${fmt(h.vf)} · test ${fmt(h.mc)})</li>`).join("")}</ol></div>
   <div><button type="button" class="btn" id="again">Hacer otro examen</button></div>`;
   r.hidden = false;
   $("#again").addEventListener("click",()=>{ build(); window.scrollTo({top:0,behavior:"smooth"}); });
@@ -613,8 +619,9 @@ $("#mode-exam").addEventListener("click",()=>setMode("exam"));
 $("#mode-prac").addEventListener("click",()=>setMode("prac"));
 $("#new").addEventListener("click",build);
 $("#grade").addEventListener("click",grade);
-document.querySelectorAll("#temas input").forEach(i=>i.addEventListener("change",()=>{
-  if(temasSel().length===0){ i.checked = true; return; }
+document.querySelectorAll("#temas button").forEach(b=>b.addEventListener("click",()=>{
+  temaSel = b.dataset.t;
+  document.querySelectorAll("#temas button").forEach(x=>x.setAttribute("aria-pressed", String(x===b)));
   build();
 }));
 build();
